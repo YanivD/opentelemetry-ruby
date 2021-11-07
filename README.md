@@ -1,5 +1,6 @@
 # OpenTelemetry Ruby
 
+
 [![Slack channel][slack-image]][slack-url]
 [![CI][ci-image]][ci-image]
 [![Apache License][license-image]][license-image]
