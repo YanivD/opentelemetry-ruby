@@ -14,6 +14,8 @@ module OpenTelemetry
         install do |_config|
           require_relative './handler'
           require_relative './services'
+          require_relative './message_attribute_setter'
+          require_relative './messaging_helper'
 
           add_plugin(Seahorse::Client::Base, *loaded_constants)
         end
