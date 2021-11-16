@@ -42,8 +42,6 @@ module OpenTelemetry
           return unless [SQS_SEND_MESSAGE, SQS_SEND_MESSAGE_BATCH, SNS_PUBLISH].include? client_method
 
           context.params[:message_attributes] ||= {}
-          # TODO: move fields count check from MessageAttributeSetter to here.
-          # Something like: if OpenTelemetry.propagation.fields.length + context.params[:message_attributes].length <= 10
           OpenTelemetry.propagation.inject(context.params[:message_attributes], setter: MessageAttributeSetter)
         end
 

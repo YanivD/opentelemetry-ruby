@@ -14,7 +14,6 @@ module OpenTelemetry
       #   OpenTelemetry.propagation.inject(context.params[:message_attributes], setter: MessageAttributeSetter)
       class MessageAttributeSetter
         def self.set(carrier, key, value)
-          # TODO: move to aws_sdk handler after resolved: https://github.com/open-telemetry/opentelemetry-ruby/issues/1019
           # https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-quotas.html
           if carrier.length < 10
             carrier[key] = { string_value: value, data_type: 'String' }
