@@ -54,7 +54,8 @@ module OpenTelemetry
           }
 
           messaging_attributes = MessagingHelper.get_messaging_attributes(context, get_service_name(context), get_operation(context))
-          span_attributes.merge(messaging_attributes)
+          db_attributes = DbHelper.get_db_attributes(context, get_service_name(context), get_operation(context))
+          span_attributes.merge(messaging_attributes).merge(db_attributes)
         end
 
         def get_service_name(context)
