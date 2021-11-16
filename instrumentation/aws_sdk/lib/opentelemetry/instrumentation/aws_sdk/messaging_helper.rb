@@ -35,6 +35,7 @@ module OpenTelemetry
           def get_messaging_attributes(context, service_name, operation)
             return get_sns_attributes(context, operation) if service_name == 'SNS'
             return get_sqs_attributes(context, operation) if service_name == 'SQS'
+
             {}
           end
 
