@@ -32,6 +32,8 @@ module OpenTelemetry
 
           tracer.in_span(span_name(context, client_method), attributes: attributes, kind: span_kind(client_method)) do |span|
             inject_context(context, client_method)
+            request_context_message_attributes(context, client_method)
+
             if instrumentation_config[:suppress_internal_instrumentation]
               OpenTelemetry::Common::Utilities.untraced { super }
             else
@@ -41,6 +43,8 @@ module OpenTelemetry
                 span.record_exception(err)
                 span.status = Trace::Status.error(err.to_s)
               end
+
+              MessagingHelper.create_sqs_processing_spans(context, tracer, response.messages) if client_method == SQS_RECEIVE_MESSAGE && response.respond_to?(:messages)
             end
           end
         end
@@ -68,6 +72,13 @@ module OpenTelemetry
             context.params[:message_attributes] ||= {}
             OpenTelemetry.propagation.inject(context.params[:message_attributes], setter: MessageAttributeSetter)
           end
+        end
+
+        def request_context_message_attributes(context, client_method)
+          return unless client_method == SQS_RECEIVE_MESSAGE
+
+          # TODO: enable by config?
+          context.params[:message_attribute_names] = ['All']
         end
 
         def span_kind(client_method)

@@ -49,6 +49,28 @@ module OpenTelemetry
             attributes[SemanticConventions::Trace::MESSAGING_DESTINATION_KIND] = 'topic'
             attributes[SemanticConventions::Trace::MESSAGING_DESTINATION] = queue_name(context)
           end
+
+          def create_sqs_processing_spans(context, tracer, messages)
+            queue_name = queue_name(context)
+            messages.each do |message|
+              attributes = {
+                SemanticConventions::Trace::MESSAGING_SYSTEM => 'aws.sqs',
+                SemanticConventions::Trace::MESSAGING_DESTINATION => queue_name,
+                SemanticConventions::Trace::MESSAGING_DESTINATION_KIND => 'queue',
+                SemanticConventions::Trace::MESSAGING_MESSAGE_ID => message.message_id,
+                SemanticConventions::Trace::MESSAGING_URL => context.params[:queue_url],
+                SemanticConventions::Trace::MESSAGING_OPERATION => 'process'
+              }
+              tracer.in_span("#{queue_name} process", attributes: attributes, links: extract_links(message), kind: :consumer) {}
+            end
+          end
+
+          def extract_links(sqs_message)
+            extracted_context = OpenTelemetry.propagation.extract(sqs_message.message_attributes, getter: MessageAttributeGetter)
+            span_context = OpenTelemetry::Trace.current_span(extracted_context).context
+
+            span_context.valid? && span_context.remote? ? [OpenTelemetry::Trace::Link.new(span_context)] : []
+          end
         end
       end
     end
