@@ -10,7 +10,7 @@ module OpenTelemetry
       # MessagingHelper class provides methods for calculating messaging span attributes
       class MessagingHelper
         class << self
-          def queue_name(context) # rubocop:disable Metrics/CyclomaticComplexity
+          def destination_name(context) # rubocop:disable Metrics/CyclomaticComplexity
             topic_arn = context.params[:topic_arn]
             target_arn = context.params[:target_arn]
             phone_number = context.params[:phone_number]
@@ -35,7 +35,7 @@ module OpenTelemetry
           def apply_sqs_attributes(attributes, context, client_method)
             attributes[SemanticConventions::Trace::MESSAGING_SYSTEM] = 'aws.sqs'
             attributes[SemanticConventions::Trace::MESSAGING_DESTINATION_KIND] = 'queue'
-            attributes[SemanticConventions::Trace::MESSAGING_DESTINATION] = queue_name(context)
+            attributes[SemanticConventions::Trace::MESSAGING_DESTINATION] = destination_name(context)
             attributes[SemanticConventions::Trace::MESSAGING_URL] = context.params[:queue_url]
 
             attributes[SemanticConventions::Trace::MESSAGING_OPERATION] = 'receive' if client_method == 'SQS.ReceiveMessage'
@@ -47,11 +47,11 @@ module OpenTelemetry
             return unless client_method == 'SNS.Publish'
 
             attributes[SemanticConventions::Trace::MESSAGING_DESTINATION_KIND] = 'topic'
-            attributes[SemanticConventions::Trace::MESSAGING_DESTINATION] = queue_name(context)
+            attributes[SemanticConventions::Trace::MESSAGING_DESTINATION] = destination_name(context)
           end
 
           def create_sqs_processing_spans(context, tracer, messages)
-            queue_name = queue_name(context)
+            queue_name = destination_name(context)
             messages.each do |message|
               attributes = {
                 SemanticConventions::Trace::MESSAGING_SYSTEM => 'aws.sqs',
@@ -66,10 +66,10 @@ module OpenTelemetry
           end
 
           def extract_links(sqs_message)
-            extracted_context = OpenTelemetry.propagation.extract(sqs_message.message_attributes, getter: MessageAttributeGetter)
+            extracted_context = OpenTelemetry.propagation.extract(sqs_message.message_attributes, context: Context::ROOT, getter: MessageAttributeGetter)
             span_context = OpenTelemetry::Trace.current_span(extracted_context).context
 
-            span_context.valid? && span_context.remote? ? [OpenTelemetry::Trace::Link.new(span_context)] : []
+            span_context.valid? ? [OpenTelemetry::Trace::Link.new(span_context)] : []
           end
         end
       end
