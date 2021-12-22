@@ -10,7 +10,7 @@ module OpenTelemetry
       # MessagingHelper class provides methods for calculating messaging span attributes
       class MessagingHelper
         class << self
-          def destination_name(context) # rubocop:disable Metrics/CyclomaticComplexity
+          def destination_name(context)
             topic_arn = context.params[:topic_arn]
             target_arn = context.params[:target_arn]
             phone_number = context.params[:phone_number]
@@ -18,11 +18,7 @@ module OpenTelemetry
 
             if topic_arn || target_arn
               arn = topic_arn || target_arn
-              begin
-                return arn.split(':')[-1]
-              rescue StandardError
-                return arn
-              end
+              return arn.split(':')[-1]
             end
 
             return 'phone_number' if phone_number
